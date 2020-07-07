@@ -1,8 +1,14 @@
+from typing import Generic, TypeVar
+
+T = TypeVar('T')
+
+
 class HashTableEntry:
     """
     Linked List hash table key/value pair
     """
-    def __init__(self, key, value):
+
+    def __init__(self, key: str, value: T) -> None:
         self.key = key
         self.value = value
         self.next = None
@@ -12,7 +18,7 @@ class HashTableEntry:
 MIN_CAPACITY = 8
 
 
-class HashTable:
+class HashTable(Generic[T]):
     """
     A hash table that with `capacity` buckets
     that accepts string keys
@@ -20,11 +26,11 @@ class HashTable:
     Implement this.
     """
 
-    def __init__(self, capacity):
-        # Your code here
+    def __init__(self, capacity: int) -> None:
+        self.capacity = max(MIN_CAPACITY, capacity)
+        self.storage = [None] * self.capacity
 
-
-    def get_num_slots(self):
+    def get_num_slots(self) -> int:
         """
         Return the length of the list you're using to hold the hash
         table data. (Not the number of items stored in the hash table,
@@ -34,8 +40,8 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
 
+        return self.capacity
 
     def get_load_factor(self):
         """
@@ -45,8 +51,7 @@ class HashTable:
         """
         # Your code here
 
-
-    def fnv1(self, key):
+    def fnv1(self, key: str) -> int:
         """
         FNV-1 Hash, 64-bit
 
@@ -55,25 +60,28 @@ class HashTable:
 
         # Your code here
 
-
-    def djb2(self, key):
+    @staticmethod
+    def djb2(key: str) -> int:
         """
         DJB2 hash, 32-bit
 
         Implement this, and/or FNV-1.
         """
-        # Your code here
 
+        hash_ = 5381
+        for x in key:
+            hash_ = ((hash_ << 5) + hash_) + ord(x)
+        return hash_ & 0xFFFFFFFF
 
-    def hash_index(self, key):
+    def hash_index(self, key: str) -> int:
         """
         Take an arbitrary key and return a valid integer index
         between within the storage capacity of the hash table.
         """
-        #return self.fnv1(key) % self.capacity
+        # return self.fnv1(key) % self.capacity
         return self.djb2(key) % self.capacity
 
-    def put(self, key, value):
+    def put(self, key: str, value: T) -> None:
         """
         Store the value with the given key.
 
@@ -81,10 +89,10 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
 
+        self.storage[self.hash_index(key)] = value
 
-    def delete(self, key):
+    def delete(self, key: str) -> T:
         """
         Remove the value stored with the given key.
 
@@ -92,10 +100,13 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
 
+        index = self.hash_index(key)
+        value = self.storage[index]
+        del self.storage[index]
+        return value
 
-    def get(self, key):
+    def get(self, key: str) -> T:
         """
         Retrieve the value stored with the given key.
 
@@ -103,10 +114,10 @@ class HashTable:
 
         Implement this.
         """
-        # Your code here
 
+        return self.storage[self.hash_index(key)]
 
-    def resize(self, new_capacity):
+    def resize(self, new_capacity: int) -> None:
         """
         Changes the capacity of the hash table and
         rehashes all key/value pairs.
@@ -116,8 +127,7 @@ class HashTable:
         # Your code here
 
 
-
-if __name__ == "__main__":
+def main() -> None:
     ht = HashTable(8)
 
     ht.put("line_1", "'Twas brillig, and the slithy toves")
@@ -151,3 +161,7 @@ if __name__ == "__main__":
         print(ht.get(f"line_{i}"))
 
     print("")
+
+
+if __name__ == "__main__":
+    main()
