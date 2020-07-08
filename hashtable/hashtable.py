@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Generic, TypeVar, List, Optional
 
 T = TypeVar('T')
 
@@ -26,9 +26,12 @@ class HashTable(Generic[T]):
     Implement this.
     """
 
+    storage: List[Optional[HashTableEntry]]
+
     def __init__(self, capacity: int) -> None:
         self.capacity = max(MIN_CAPACITY, capacity)
         self.storage = [None] * self.capacity
+        self.count = 0
 
     def get_num_slots(self) -> int:
         """
@@ -43,13 +46,13 @@ class HashTable(Generic[T]):
 
         return self.capacity
 
-    def get_load_factor(self):
+    def get_load_factor(self) -> float:
         """
         Return the load factor for this hash table.
 
         Implement this.
         """
-        # Your code here
+        return self.count / self.capacity
 
     def fnv1(self, key: str) -> int:
         """
@@ -90,7 +93,27 @@ class HashTable(Generic[T]):
         Implement this.
         """
 
-        self.storage[self.hash_index(key)] = value
+        index = self.hash_index(key)
+
+        item = self.storage[index]
+
+        if item is None:
+            self.storage[index] = HashTableEntry(key, value)
+            self.count += 1
+        else:
+            prev_item = None
+            while item is not None:
+                if item.key == key:
+                    item.value = value
+                    break
+
+                prev_item = item
+                item = item.next
+            else:
+                prev_item.next = HashTableEntry(key, value)
+
+        if self.get_load_factor() >= 0.7:
+            self.resize(self.capacity * 2)
 
     def delete(self, key: str) -> T:
         """
@@ -101,12 +124,26 @@ class HashTable(Generic[T]):
         Implement this.
         """
 
-        index = self.hash_index(key)
-        value = self.storage[index]
-        del self.storage[index]
-        return value
+        item = self.storage[(index := self.hash_index(key))]
+        prev_item = None
 
-    def get(self, key: str) -> T:
+        while item is not None:
+            if item.key == key:
+                if prev_item is None:
+                    self.storage[index] = item.next
+                else:
+                    prev_item.next = item.next
+                self.count -= 1
+
+                if self.get_load_factor() <= 0.2:
+                    self.resize(self.capacity // 2)
+
+                return item.value
+
+            prev_item = item
+            item = item.next
+
+    def get(self, key: str) -> Optional[T]:
         """
         Retrieve the value stored with the given key.
 
@@ -115,7 +152,12 @@ class HashTable(Generic[T]):
         Implement this.
         """
 
-        return self.storage[self.hash_index(key)]
+        item = self.storage[self.hash_index(key)]
+
+        while item is not None:
+            if item.key == key:
+                return item.value
+            item = item.next
 
     def resize(self, new_capacity: int) -> None:
         """
@@ -124,7 +166,15 @@ class HashTable(Generic[T]):
 
         Implement this.
         """
-        # Your code here
+
+        old_storage = self.storage
+        self.capacity = new_capacity
+        self.storage = [None] * new_capacity
+
+        for item in old_storage:
+            while item is not None:
+                self.put(item.key, item.value)
+                item = item.next
 
 
 def main() -> None:
