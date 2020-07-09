@@ -1,6 +1,10 @@
-def no_dups(s):
-    # Your code here
+def no_dups(s: str) -> str:
+    words = {}
 
+    for word in s.split():
+        words[word] = word
+
+    return ' '.join(words)
 
 
 if __name__ == "__main__":
